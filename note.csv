@@ -1,0 +1,44 @@
++-----------------+           +-------------------+           +---------------------+
+| User Inputs Data|  ----->   | App Reads Data from|  ----->  |  Model Trained with Data |
+| (previous values, |          |   data.txt          |           |  (or loads pre-trained model) |
+|   start time)     |          |                       |           |                             |
++-----------------+           +-------------------+           +---------------------+
+         |                              |                               |
+         v                              v                               v
++-----------------+            +-------------------+           +---------------------+
+|  App Prepares   |    ----->   | App Makes        |  ----->  |  Results Sent to      |
+|  Data for Prediction|         | Predictions       |           |  HTML UI                 |
+|                            |          |                       |                             |
++-----------------+           +-------------------+           +---------------------+
+         |                              |                               |
+         v                              v                               v
++-----------------+            +-------------------+           +---------------------+
+| App Updates      |   ----->  | App Filters Results | -----> | HTML UI Displays Results|
+| data.txt           |         |   (probability >= 80%)|        |  (Modal with Predictions) |
++-----------------+            +-------------------+           +---------------------+
+The app works by using the data in data.txt to train a linear regression model, and then it uses this trained model to make predictions based on the input provided by the user. Here is a step-by-step explanation of how the app works:
+
+Data Preprocessing:
+
+The app reads data from data.txt using the preprocess_data function. This data consists of values and corresponding times.
+The data is then structured into a list of tuples with each tuple containing a value and its corresponding hour and minute.
+Model Training:
+
+The app tries to load a pre-trained model from trained_model.pkl. If the model file is not found, it trains a new model using the preprocessed data.
+The training involves creating a DataFrame from the data, shifting the values to create a 'previous_value' column, and dropping any rows with missing values.
+The features (X) are the 'previous_value', 'hour', and 'minute' columns, and the target (y) is the 'value' column.
+The train_model function is called to train a linear regression model using these features and target.
+Prediction:
+
+When the user submits a request for prediction, the app receives the input values and the start time (hour and minute) from the HTML form.
+The app preprocesses this input to create a new set of data points for prediction.
+The model.predict method is used to predict the values for these new data points.
+The app processes the predictions, caps and rounds them, and generates random probabilities for each prediction (for demonstration purposes).
+Updating Data and Making Future Predictions:
+
+The new input data is appended to data.txt for future use.
+The app generates predictions for different intervals (5 minutes, 30 minutes, and 60 minutes) from the input time.
+Predictions are filtered to include only those with a probability of 80% or higher.
+Displaying Results:
+
+The predictions, along with their corresponding times and probabilities, are sent back to the HTML UI where they are displayed in a modal.

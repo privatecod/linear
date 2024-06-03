@@ -1,0 +1,12 @@
+1.3
+1.21
+3.8
+66.42
+8.45
+2.8
+6.5
+7.5
+4.4
+1.8
+source /Users/admin/Desktop/path/to/venv/bin/activate
+thanks now when i add new data from the html to predict for the time being  add python code on a seperate file that will store the data in data.txt , that way the next predictions are more informed have more data so that this application as a whole increases accuracy with more multiplier data you feed it , also i want to apply more logic as to how i can give this model the data for the buggest multipliers  of the day , biggest multipliers of the month , basicaly push that down as in new previous multiplier data is inesrted from the html to the data.txt file the biggest multpliers of the day and month are used as a base for predictions and the model can hilight any consistency using javascript alert, for example ithe next predicted outcome is similar to a multiplier we have on the data.txt database  so that this applications data grows and the application/model has this data in its big tree and can calculate/predict even better also when making the three predictions provide percentage rate of that possible output( multiplier ) ,, in short words this application must have its own mind !!  
