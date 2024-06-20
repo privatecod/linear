@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: linear
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT linear:app
+    repo: https://github.com/privatecod/linear
