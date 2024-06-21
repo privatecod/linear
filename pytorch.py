@@ -82,7 +82,7 @@ def process_predictions(predictions):
         processed_predictions.append(round(pred, 3))
     return processed_predictions
 
-# Main Application
+# Main Application (example usage)
 if __name__ == "__main__":
     # Load and preprocess data
     data = preprocess_data('data.txt')  # Ensure 'data.txt' is in the scripts folder
@@ -115,3 +115,4 @@ if __name__ == "__main__":
     
     # Save the model
     torch.save(model.state_dict(), 'model.pth')
+
