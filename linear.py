@@ -1,33 +1,43 @@
 from flask import Flask, render_template, request, jsonify
 import joblib
+from werkzeug.urls import url_quote
+
 import numpy as np
 from datetime import datetime, timedelta
-from model2 import preprocess_data, load_and_preprocess_data, train_random_forest, evaluate_model, predict_value
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import torch
+from pytorch_module import preprocess_data, train_model, process_predictions, SimpleRegressionModel, classify_flight
 
 app = Flask(__name__)
 
 DATA_FILE = 'data.txt'
 MODEL_FILE = 'trained_model_rf.pkl'
+PYTORCH_MODEL_FILE = 'model.pth'
 
-model = None
+model_rf = None
+model_pytorch = None
 
-def calculate_probability(value, mean, std):
-    if std == 0:
-        return 0  # Avoid division by zero
-    z_score = (value - mean) / std
-    probability = (1.0 - np.abs(z_score) / 3) * 100  # Simple linear scaling
-    probability = max(0, min(100, probability))  # Clamp to [0, 100]
-    print(f"Value: {value}, Mean: {mean}, Std: {std}, Z-score: {z_score}, Probability: {probability}")
-    return probability
-
+# Load Random Forest model
 try:
-    model = joblib.load(MODEL_FILE)
+    model_rf = joblib.load(MODEL_FILE)
 except FileNotFoundError:
-    X, y = load_and_preprocess_data()
-    model = train_random_forest(X, y)
-    joblib.dump(model, MODEL_FILE)
+    # Handle the case where the model file is not found
+    pass
 except Exception as e:
-    print(f"Error loading model: {e}")
+    print(f"Error loading Random Forest model: {e}")
+
+# Load PyTorch model
+try:
+    model_pytorch = SimpleRegressionModel(input_dim=3)  # Assuming input_dim matches your features
+    model_pytorch.load_state_dict(torch.load(PYTORCH_MODEL_FILE))
+    model_pytorch.eval()
+except FileNotFoundError:
+    # Handle the case where the PyTorch model file is not found
+    pass
+except Exception as e:
+    print(f"Error loading PyTorch model: {e}")
 
 @app.route('/')
 def index():
@@ -46,7 +56,9 @@ def save_data():
 
         with open(DATA_FILE, 'a') as file:
             for previous_value in previous_values:
-                file.write(f'{previous_value} {hour:02}:{minute:02}\n')
+                # Encode each previous_value before saving
+                encoded_previous_value = url_quote(previous_value)
+                file.write(f'{encoded_previous_value} {hour:02}:{minute:02}\n')
 
         return jsonify({'message': 'Data saved successfully'})
     except Exception as e:
@@ -80,22 +92,33 @@ def predict():
         time = datetime(2000, 1, 1, start_hour, start_minute)
         last_value = previous_values[-1]
 
-        predictions = []
-        for i in range(3):  # Generate 3 predictions
-            time += timedelta(minutes=1)
-            prediction = predict_value(last_value, time.hour, time.minute)
-            probability = calculate_probability(prediction, mean, std)
-            predictions.append({
-                'previous_value': last_value,
-                'predicted_value': round(prediction, 3),
-                'probability': round(probability, 2),
-                'time': time.strftime('%H:%M:%S')
-            })
+        # Predict using Random Forest model
+        rf_prediction = model_rf.predict([[last_value, start_hour, start_minute]])
+        
+        # Predict using PyTorch model
+        if model_pytorch is not None:
+            pytorch_prediction_tensor = torch.tensor([[last_value, start_hour, start_minute]], dtype=torch.float32)
+            pytorch_prediction = model_pytorch(pytorch_prediction_tensor).item()
+            pytorch_prediction = process_predictions([pytorch_prediction])[0]  # Process PyTorch prediction
 
-        if not predictions:
-            return jsonify({'message': 'No predictions available.'})
+        # Calculate probability for RF prediction
+        rf_probability = calculate_probability(rf_prediction, mean, std)
+        
+        # Prepare response
+        predictions = {
+            'rf_prediction': round(rf_prediction[0], 3),
+            'rf_probability': round(rf_probability, 2),
+            'pytorch_prediction': round(pytorch_prediction, 3) if model_pytorch is not None else None
+        }
 
         return jsonify({'predictions': predictions})
+    
     except Exception as e:
         print(f"Error during prediction request: {e}")
         return jsonify({'error': 'An unexpected error occurred.'}), 500
+<<<<<<< HEAD:scripts/linear.py
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
+=======
+>>>>>>> Initial commit:linear.py
