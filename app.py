@@ -96,6 +96,7 @@ def predict():
         rf_prediction = model_rf.predict([[last_value, start_hour, start_minute]])
         
         # Predict using PyTorch model
+        pytorch_prediction = None
         if model_pytorch is not None:
             pytorch_prediction_tensor = torch.tensor([[last_value, start_hour, start_minute]], dtype=torch.float32)
             pytorch_prediction = model_pytorch(pytorch_prediction_tensor).item()
@@ -108,7 +109,7 @@ def predict():
         predictions = {
             'rf_prediction': round(rf_prediction[0], 3),
             'rf_probability': round(rf_probability, 2),
-            'pytorch_prediction': round(pytorch_prediction, 3) if model_pytorch is not None else None
+            'pytorch_prediction': round(pytorch_prediction, 3) if pytorch_prediction is not None else None
         }
 
         return jsonify({'predictions': predictions})
@@ -116,9 +117,10 @@ def predict():
     except Exception as e:
         print(f"Error during prediction request: {e}")
         return jsonify({'error': 'An unexpected error occurred.'}), 500
-<<<<<<< HEAD:scripts/linear.py
+
+def calculate_probability(prediction, mean, std):
+    # Define your method to calculate probability
+    return np.exp(-((prediction - mean) ** 2) / (2 * (std ** 2))) / (std * np.sqrt(2 * np.pi))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
-=======
->>>>>>> Initial commit:linear.py
